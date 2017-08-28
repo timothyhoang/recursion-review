@@ -5,6 +5,18 @@
 var TOKENS = ['"', '{', '}', '[', ']'];
 var TOKEN_MAP = {'"':'"', '{':'}', '[':']'};
 
+var trimLeadingAndTrailingWhitespace = function(json) {
+  var start = 0;
+  var end = json.length;
+  while (json[start] === ' ') {
+    start++;
+  }
+  while (json[end] === ' ') {
+    end--;
+  }
+  return json.slice(start, end + 1);
+};
+
 var areComplementaryTokens = function(firstChar, lastChar) {
   return TOKENS.includes(firstChar) && TOKEN_MAP[firstChar] === lastChar;
 };
@@ -15,14 +27,17 @@ var parseElement = function(json) {
 
 var parseString = function(json) {
   var string = '';
+  var includesEscape = false;
   var i = 0;
   while (json[++i] !== '"' && i < json.length) {
     if (json[i] === '\\') {
       string = string + json[i++];
+      includesEscape = true;
     }
     string = string + json[i];
   };
-  return string;
+
+  return includesEscape ? eval(string) : string;
 };
 
 var nextNonSpaceIndex = function(json, i) {
@@ -110,6 +125,7 @@ var parseArray = function(json) {
 };
 
 var parseJSON = function(json) {
+  json = trimLeadingAndTrailingWhitespace(json);
   var firstChar = json[0];
   var lastChar = json[json.length - 1];
   if (areComplementaryTokens(firstChar, lastChar)) {
